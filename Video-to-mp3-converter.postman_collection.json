@@ -10,7 +10,7 @@
 			"name": "Gateway",
 			"item": [
 				{
-					"name": "http://localhost:9000/convert",
+					"name": "Convert (Upload file)",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -39,7 +39,7 @@
 					"response": []
 				},
 				{
-					"name": "http://localhost:9000/files",
+					"name": "Get all files",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -58,7 +58,7 @@
 					"response": []
 				},
 				{
-					"name": "http://localhost:9000/files/babb10c283bcea456146885665f1adda.mp4",
+					"name": "Get single file",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -78,7 +78,7 @@
 					"response": []
 				},
 				{
-					"name": "http://localhost:9000/del-file/babb10c283bcea456146885665f1adda.mp4",
+					"name": "Delete single file",
 					"request": {
 						"method": "DELETE",
 						"header": [],
@@ -92,6 +92,45 @@
 							"path": [
 								"del-file",
 								"fe2b06baedd612d005578807ccd70b73.mp4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download single file",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9000/download-file/a5014fd86cecec804c522202b5d9a1fc.mp4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9000",
+							"path": [
+								"download-file",
+								"a5014fd86cecec804c522202b5d9a1fc.mp4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete all files",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9000/delete-all-files",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9000",
+							"path": [
+								"delete-all-files"
 							]
 						}
 					},

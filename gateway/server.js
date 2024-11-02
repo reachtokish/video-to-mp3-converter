@@ -60,9 +60,6 @@ const upload = multer({ storage });
 
 
 app.post('/convert', upload.single('file'), (req, res) => {
-
-  console.log('req.file', req.file)
-
   amqp.connect("amqp://guest:guest@127.0.0.1", (err, connection) => {
     if (err) {
       throw err;
