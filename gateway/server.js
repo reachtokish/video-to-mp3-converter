@@ -8,6 +8,7 @@ const GridFsStorage = require('multer-gridfs-storage');
 const Grid = require('gridfs-stream');
 const methodOverride = require('method-override');
 const crypto = require('crypto');
+const fs = require('fs');
 
 const app = express();
 const port = 9000;
@@ -15,7 +16,6 @@ const port = 9000;
 // Middleware
 app.use(bodyParser.json());
 app.use(methodOverride('_method'));
-app.set('view engine', 'ejs');
 
 // Mongo URI
 const mongoURI = 'mongodb://localhost:27018/mongouploads';
@@ -24,9 +24,13 @@ const mongoURI = 'mongodb://localhost:27018/mongouploads';
 const conn = mongoose.createConnection(mongoURI);
 
 // Init gfs
-let gfs;
+let gfs, gridfsBucket;
 
 conn.once('open', () => {
+  gridfsBucket = new mongoose.mongo.GridFSBucket(conn.db, {
+    bucketName: 'uploads'
+  });
+
   // Init stream
   gfs = Grid(conn.db, mongoose.mongo);
   gfs.collection('uploads');
@@ -51,9 +55,38 @@ const storage = new GridFsStorage({
     });
   }
 });
+
 const upload = multer({ storage });
 
+
 app.post('/convert', upload.single('file'), (req, res) => {
+
+  console.log('req.file', req.file)
+
+  amqp.connect("amqp://guest:guest@127.0.0.1", (err, connection) => {
+    if (err) {
+      throw err;
+    }
+
+    connection.createChannel((err, channel) => {
+      if (err) {
+        throw err;
+      }
+      let queueName = "video";
+      
+      let message = JSON.stringify({
+        status: 'success',
+        fileName: req.file.filename
+      });
+
+      channel.sendToQueue(queueName, Buffer.from(message));
+      console.log(`Message: ${message}`);
+      setTimeout(() => {
+        connection.close();
+      }, 1000);
+    });
+  });
+
   res.json({ file: req.file });
 });
 
@@ -69,9 +102,22 @@ app.get("/files", async (req, res) => {
 app.get('/files/:filename', async (req, res) => {
   try {
     let file = await gfs.files.findOne({ filename: req.params.filename });
+
     res.json({ file })
   } catch (err) {
-      res.json({err})
+    res.json({err})
+  }
+});
+
+app.get('/download-file/:filename', async (req, res) => {
+  try {
+    let file = await gfs.files.findOne({ filename: req.params.filename });
+    
+    let downloadStream = gridfsBucket.openDownloadStream(file._id)
+    downloadStream.pipe(res)
+  } catch (err) {
+    console.log('err', err)
+    res.json({err})
   }
 });
 
@@ -88,6 +134,16 @@ app.delete('/del-file/:filename', async (req, res) => {
     }
   } catch (err) {
     res.json({err})
+  }
+});
+
+app.delete("/delete-all-files", async (req, res) => {
+  try {
+      await gridfsBucket.drop();
+      res.json({ message: "All file and chunks deleted" })
+  } catch (err) {
+    console.log('err', err)
+      res.json({err})
   }
 });
 
